@@ -262,6 +262,10 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         # Offset from the first parameter in the self.params_in_partition
         # the parameter boundaries may not align with partition boundaries
         # so we need to keep track of the offset
+        # flat buffer:  [       |         |     ]
+        # star/end idx:         s         e
+        # first param:        a   b
+        # offset stores `s-a`
         self.first_offset = []
 
         # number of elements per partition in each group
