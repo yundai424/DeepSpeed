@@ -419,21 +419,22 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         #self.copy_grad_stream = get_accelerator().Stream()
         self.callback_queued = False
 
-        self.param_dict = {}
-
         # map between param_id and bool to specify if a param is in this partition
         self.is_param_in_current_partition = {}
 
         self.grads_in_ipg_bucket = []
         self.params_in_ipg_bucket = []
         self.elements_in_ipg_bucket = 0
-        self.params_already_reduced = []
         self._release_ipg_buffers()
         self.previous_reduced_grads = None
         self.ipg_bucket_has_moe_params = False
 
-        # simplified param id
+        # simplified param id, map from id(param) to contiguous increment int id
         self.param_id = {}
+        # map from param id to param obj
+        self.param_dict = {}
+        # map from param id to bool flag
+        self.params_already_reduced = []
 
         #interesting code: unique ids being assigned to individual parameters
         largest_param_numel = 0
