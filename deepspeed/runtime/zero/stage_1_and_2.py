@@ -295,7 +295,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
         # padding on each partition for alignment purposes
         self.groups_padding = []
         # loop to deal with groups
-        for i, param_group in enumerate(self.optimizer.param_groups):
+        for i, param_group in enumerate(self.optimizer.param_groups):  # usually there will be just 1 group
             partition_id = dist.get_rank(group=self.real_dp_process_group[i])
 
             # push this group to list before modify
@@ -344,6 +344,8 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             self.round_robin_bit16_meta.append(meta_tensors)
 
             # create flat buffer in CPU
+            # pad 0 to end to make numel of tensor_list a multiple of alignment --> byte size a multiple of 4 and a multiple of world size
+            # align nccl all-gather send buffers to 4-byte boundary
             flattened_buffer = self.flatten_dense_tensors_aligned(
                 self.round_robin_bit16_groups[i],
                 self.nccl_start_alignment_factor * dist.get_world_size(group=self.real_dp_process_group[i]),
@@ -369,7 +371,8 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             if dist.get_rank(group=self.real_dp_process_group[i]) == 0:
                 see_memory_usage(f"After Flattening and after emptying param group {i} cache", force=False)
 
-            # set model bit16 weight to slices of flattened buffer
+            # set model bit16 weight as well as the underlying storage of round robin (not flattened) tensor
+            # to view of the flattened buffer
             self._update_model_bit16_weights(i)
 
             # divide the flat weights into near equal partition equal to the data parallel degree
@@ -398,6 +401,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 i].requires_grad = True  # keep this in case internal optimizer uses it
             param_group['params'] = [self.single_partition_of_fp32_groups[i]]
 
+            # this is already padded and aligned so returned val is the elem size each rank will work on and is consistent across all ranks
             partition_size = len(self.bit16_groups_flat[i]) / dist.get_world_size(group=self.real_dp_process_group[i])
             params_in_partition, params_not_in_partition, first_offset = self.get_partition_info(
                 self.round_robin_bit16_groups[i], partition_size, partition_id)
