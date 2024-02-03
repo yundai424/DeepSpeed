@@ -465,6 +465,8 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             self.accumulated_grads_in_cpu = {}
             self.norm_for_param_grads = {}
             self.local_overflow = False
+            # param ID -> param group ID, start offset in tensor to be handled by this rank, 
+            # offset in grad buffer partition, num elements to be handled by this rank
             self.grad_position = {}
             self.temp_grad_buffer_for_cpu_offload = torch.zeros(largest_param_numel,
                                                                 device=self.device,
