@@ -890,6 +890,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                 if param.requires_grad:
 
                     def wrapper(param, i):
+                        # might be intended to ensure param_tmp has a separate grad_fn chain?
                         param_tmp = param.expand_as(param)
                         grad_acc = param_tmp.grad_fn.next_functions[0][0]
 
