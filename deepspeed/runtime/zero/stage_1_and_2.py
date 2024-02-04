@@ -238,6 +238,10 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
             assert self.gradient_predivide_factor == 1.0, f"gradient_predivide_factor != 1.0 is not yet supported with {self.zero_stage_string} with reduce scatter enabled"
             assert self.postscale_gradients, f"pre-scale gradients is not yet supported with {self.zero_stage_string} with reduce scatter enabled"
 
+        # optimizer param -> single_partition_of_fp32_groups[partition_id]
+        # 16bit_groups: actual model parameters used for forward and backward. it grad will be synchronized
+        # before optimizer.step(), sync'd gradient will be moved to single_partition_of_fp32_groups[partition_id].grad
+        
         # param flattened by groups
         self.bit16_groups = []
         self.bit16_groups_flat = []
