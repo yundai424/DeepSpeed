@@ -1093,6 +1093,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
                         numel = partition_ids_w_offsets[idx + 1][1] - offset
 
                     # Merge bucket ranges if they belong to the same rank
+                    # will this branch ever be entered????
                     if partition_id == prev_id and process_group == prev_process_group:
                         prev_pid, prev_size, prev_numel = rank_and_offsets[-1]
                         rank_and_offsets[-1] = (prev_pid, prev_size, prev_numel + numel)
