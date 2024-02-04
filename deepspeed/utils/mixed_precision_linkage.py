@@ -8,10 +8,13 @@ from deepspeed.utils import get_full_hp_param, get_full_hp_grad, get_hp_fragment
 from deepspeed.utils import set_full_hp_param
 
 
+# bit16_group, single_partition_of_fp32_groups, averaged_gradients, offload_gradient_dict
 def link_hp_params(lp_param_list, flat_hp_partition, gradient_dict, offload_gradient_dict, use_offload,
+                   #                 partition_id * partition_size, part_size, self.optimizer.state[flat_hp_partition]
                    param_group_index, partition_start, partition_size, partition_optimizer_state, dp_group):
     local_lp_param_and_offset = _init_lp_to_hp_mapping(lp_param_list, partition_start, partition_size, dp_group)
 
+    #             elem offset in flatbuffer
     for lp_param, lp_start in local_lp_param_and_offset:
         lp_param._hp_mapping = get_hp_fragment_mapping(lp_param, lp_start, flat_hp_partition, gradient_dict,
                                                        offload_gradient_dict, use_offload, param_group_index,
@@ -34,7 +37,7 @@ def _init_lp_to_hp_mapping(lp_param_list, partition_start, partition_size, dp_gr
         # 1) current_offset < partition_end,
         # 2) current_offset + lp_param.numel() >= partition_start
         lp_param_end = current_offset + lp_param.numel()
-        if current_offset < partition_end and lp_param_end > partition_start:
+        if current_offset < partition_end and lp_param_end > partition_start:    # if not (current_offset >= partition_end or lp_param_end <= partition_start)
             param_and_offset_list.append((lp_param, current_offset))
             lp_param._index_in_param_group = index_in_param_group
             # Indices for params in this partition/GPU

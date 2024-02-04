@@ -574,7 +574,7 @@ class DeepSpeedZeroOptimizer(ZeROOptimizer):
     def _link_all_hp_params(self):
         dp_world_size = dist.get_world_size(group=self.dp_process_group)
         if self.cpu_offload:
-            self._get_offload_gradient_dict()
+            self._get_offload_gradient_dict()  # gradient of tensors in single_partition_of_fp32_groups corresponding to params in this part
 
         for i, _ in enumerate(self.optimizer.param_groups):
             # Link bit16 and fp32 params in partition

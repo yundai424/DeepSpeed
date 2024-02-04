@@ -256,6 +256,12 @@ def safe_set_local_fp32_param(param, value):
 
 def get_hp_fragment_mapping(lp_param, lp_start, flat_hp_partition, gradient_dict, offload_gradient_dict, use_offload,
                             param_group_index, partition_start, partition_size, optimizer_state_dict):
+    # lp_start: start offset of this param in the overall long partition (full size across all ranks)
+    # hp_start: rank index * partition_size
+    # [               |          |      ]
+    #                hps        hpe
+    #             lps      lpe
+    #                 fs    fe
     lp_end = lp_param.numel() + lp_start
     hp_start = partition_start
     hp_end = partition_start + partition_size
@@ -266,6 +272,8 @@ def get_hp_fragment_mapping(lp_param, lp_start, flat_hp_partition, gradient_dict
         f'fragment start {fragment_start} should be < fragment_end {fragment_end}'
 
     fragment_numel = fragment_end - fragment_start
+    # the address with respect to the flattened tensor of this partition (i.e. single_partition_of_fp32_groups)
+    # to reflect which part of the original flattened fp32 buffer corresponds to this param on this rank
     hp_frag_address = fragment_address(start=fragment_start - hp_start, numel=fragment_numel)
     hp_fragment_tensor = flat_hp_partition.narrow(0, hp_frag_address.start, hp_frag_address.numel)
     optim_fragment = {
@@ -273,7 +281,8 @@ def get_hp_fragment_mapping(lp_param, lp_start, flat_hp_partition, gradient_dict
         for key, value in optimizer_state_dict.items()
         if torch.is_tensor(value) and value.shape == flat_hp_partition.shape
     }
-
+    # the address with respect to the original lp_param
+    # to reflect which part of the original lp_param is handled by this rank
     lp_frag_address = fragment_address(start=fragment_start - lp_start, numel=fragment_numel)
     lp_fragment_tensor = lp_param.flatten().narrow(0, lp_frag_address.start, lp_frag_address.numel)
 
