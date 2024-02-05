@@ -115,6 +115,7 @@ class DeepSpeedZeroOptimizer_Stage3(ZeROOptimizer):
         gradient_accumulation_steps=1,
         elastic_checkpoint=False,
         aio_config=None,
+        # only not-non when using qgZ
         # if with 2 nodes each with 8 GPUs, 2 local groups and 8 global groups
         # local groups: one for each node, for intra-node comm
         # [0, 1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14, 15]
