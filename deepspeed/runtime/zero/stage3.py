@@ -660,6 +660,10 @@ class DeepSpeedZeroOptimizer_Stage3(ZeROOptimizer):
                 self.param_groups_fp16_flat_cpu_memory.append(torch.empty(1, dtype=self.dtype))
 
     def _create_fp16_partitions_with_defragmentation(self, fp16_param_groups):
+        """
+        partition into multiple subgroups each with size ~sub_group_size, and each subgroup's data
+        will be moved to a single contiguous buffer
+        """
         dist.barrier()
 
         param_groups: List[List[Parameter]] = tuple(
