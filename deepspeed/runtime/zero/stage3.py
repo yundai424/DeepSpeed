@@ -115,6 +115,11 @@ class DeepSpeedZeroOptimizer_Stage3(ZeROOptimizer):
         gradient_accumulation_steps=1,
         elastic_checkpoint=False,
         aio_config=None,
+        # if with 2 nodes each with 8 GPUs, 2 local groups and 8 global groups
+        # local groups: one for each node, for intra-node comm
+        # [0, 1, 2, 3, 4, 5, 6, 7], [8, 9, 10, 11, 12, 13, 14, 15]
+        # global groups: one for each loal rank, for inter-node comm
+        # # [0, 8], [1, 9], [2, 10], [3, 11], [4, 12], [5, 13], [6, 14], [7, 15]
         all2all_process_group=None,
         zero_hpz_partition_size=1,
         zero_quantized_weights=False,
